@@ -53,10 +53,13 @@ getNonterms plist = S.toList $ foldl (\set (Production nt _ _) -> S.insert nt se
 
 genTokenDecl :: [String] -> String
 genTokenDecl tokens =
-  header ++
   concatMap (\t -> "    '" ++ t ++ "'   { " ++ tokenName t ++ " }\n") tokens
   where header = "%token\n"
 
+genTokenData :: [String] -> String
+genTokenData tokens = 
+  "data Token = TokenId String\n" ++ concatMap (\t -> "           | " ++ tokenName t ++"\n") tokens ++ "   deriving (Show)\n\n"
+  
 isKLabel :: Attribute -> Bool
 isKLabel (KLabel _) = True
 isKLabel _          = False
@@ -70,6 +73,61 @@ showSymbol :: Symbol -> String
 showSymbol (NT s) = s
 showSymbol (T s) = "'" ++ s ++ "'"
 
+genAction :: Production -> String -> String
+genAction p@(Production nt symbols attrs) kl =
+  let showNonterms (T _) i = ""
+      showNonterms (NT _) i = "$" ++ show i
+      symbolList = case intercalate ",\",\"," (filter (/= "") $ zipWith showNonterms symbols (enumFrom 1)) of
+        "" -> "\"\""
+        x  -> x
+  in concat [ "concat [\""
+            , kl
+            , " { } (\", "
+            , symbolList
+            , ", \")\"]"]
+
 genProduction p@(Production l symbols attributes) =
   let kl = getKLabel p
-   in l ++ ": " ++ intercalate " " (map showSymbol symbols)
+   in concat [ l
+             , ": "
+             , intercalate " " (map showSymbol symbols)
+             , "  { "
+             , (genAction p kl)
+             , " } "]
+
+
+happyHeader =
+  concat [ "{\n"
+         , "module Grammar2 where\n"
+         , "import Data.Char\n"
+         , "}\n"
+         , "\n"
+         , "%name kinkgrammar\n"
+         , "%tokentype { Token }\n"
+         , "%error { parseError }\n\n"
+         , "%token\n"]
+
+happyMedium =
+  concat [ "{\n"
+         , "parseError :: [Token] -> a\n"
+         , "parseError x = error (\"Parse error: \" ++ show x)\n"
+         ]
+
+lexerBegin =
+  concat [ "lexId [] = (\"\",[])\n"
+         , "lexId (c:xx) | isAlpha c =\n"
+         , "  let (result,rest) = span isAlphaNum xx\n"
+         , "   in (c:result, rest)\n"
+         , "\n"
+         , "eatws (c:xs) | isSpace c = eatws xs\n"
+         , "eatws xx = xx\n"
+         , "\n"
+         , "lexer :: String -> [Token]\n"
+         , "lexer [] = []\n"
+         , "lexer (c:xs)  | isSpace c = lexer xs"]
+
+lexSymbols tokens =
+   concat ["lexer ('" ++ t ++ "':xs) = " ++ tokenName t ++ ": lexer xs\n" | t <- tokens, H.member t tokenNames]
+
+lexTerminals tokens =
+   concat ["    (\"" ++ s ++ "\",xs) -> " ++ tokenName s ++ " : lexer (eatws xs)\n" | s <- tokens, not (H.member s tokenNames)]

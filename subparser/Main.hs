@@ -4,4 +4,4 @@ import Lib
 import Grammar2
 
 main :: IO ()
-main = getContents >>= print . kgrammar . lexer
+main = getContents >>= print . kinkgrammar . lexer
