@@ -9,5 +9,9 @@ main = do
    let k = (kgrammar . lexer) c
    print k
    print "Tokens:"
-   print (getTokens k)
+   let tokens = getTokens k
+   putStrLn (genTokenDecl tokens)
+   print "Nonterminals:"
+   putStrLn (show $ getNonterms k)
+   mapM putStrLn (map genProduction k)
    return ()
