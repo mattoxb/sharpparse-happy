@@ -18,14 +18,11 @@ import Data.Char
 
 %%
 
-Grm: Foo { $1 }
+Grm: Nat { $1 }
 
 Nat: Nat '+' Nat  { concat ["plus { } (", $1,",",$3, ")"] } 
 Nat: 's' '(' Nat ')'  { concat ["succ { } (", $3, ")"] } 
 Nat: '.'  { concat ["zero { } (", "", ")"] } 
-Foo: Foo '+' Foo  { concat ["fooplus { } (", $1,",",$3, ")"] } 
-Foo: 's' '(' Foo ')'  { concat ["foosucc { } (", $3, ")"] } 
-Foo: '.'  { concat ["foozero { } (", "", ")"] } 
 
 {
 parseError :: [Token] -> a

@@ -14,6 +14,9 @@ import Production
    id       { TokenId $$ }
    '::='    { TokenDefinedAs }
    'syntax' { TokenSyntax }
+   'module' { TokenModule }
+   'LANGUAGE-GRAMMAR' { TokenLanguageGrammar }
+   'endmodule' { TokenEndmodule }
    ';'      { TokenSemicolon }
    'klabel' { TokenKLabel }
    '('      { TokenLeftParen }
@@ -23,7 +26,9 @@ import Production
 
 %%
 
-Grm : Productions  { reverse $1 }
+Grm : Module  { reverse $1 }
+
+Module: 'module' 'LANGUAGE-GRAMMAR' Productions 'endmodule' { $3 }
 
 Productions : { [] }
             | Production  { [ $1 ] }
@@ -56,6 +61,8 @@ data Token
       | TokenRightParen
       | TokenId String
       | TokenKLabel
+      | TokenLanguageGrammar
+      | TokenEndmodule
       | TokenError String
     deriving Show
 
@@ -63,6 +70,7 @@ lexId [] = ("",[])
 lexId (c:xx) | isAlpha c =
   let (result,rest) = span isAlphaNum xx
    in (c:result, rest) 
+lexId _ = ("",[])
 
 notQuote '"' = False
 notQuote _ = True
@@ -79,9 +87,13 @@ lexer (')':xs) = TokenRightParen : lexer xs
 lexer ('"':xx) = case span notQuote xx of
       ("",xs) -> parseError [TokenError xs]
       (s,'"':xs) -> TokenT s : lexer xs
+lexer ('L':'A':'N':'G':'U':'A':'G':'E':'-':'G':'R':'A':'M':'M':'A':'R':xs)
+      = TokenLanguageGrammar : lexer xs
 lexer xx = case lexId xx of
       ("",xs) -> [] -- handles eof
       ("syntax",xs) -> TokenSyntax : lexer xs
+      ("module",xs) -> TokenModule : lexer xs
+      ("endmodule",xs) -> TokenEndmodule : lexer xs
       ("klabel",xs) -> TokenKLabel : lexer xs
       ("END",xs) -> [] -- handles eof
       (s,xs) -> TokenId s : lexer xs
