@@ -1,7 +1,9 @@
 module Main where
 
 import Lib
+import Production
 import Grammar
+import System.Environment
 
 main :: IO ()
 main = do
@@ -16,7 +18,17 @@ main = do
    putStrLn (genTokenDecl tokens)
    putStrLn "\n%%\n"
 
-   -- Print out grammar
+   -- Generate Grammar
+   let prods = map genProduction k
+
+   -- Check for start symbol
+   args <- getArgs
+
+   let start = case (args,head k) of
+                 (x:xs, _)               -> x
+                 ([]  , Production l _ _)  -> l
+
+   putStrLn $ "Grm: " ++ start ++ " { $1 }\n"
    mapM putStrLn (map genProduction k)
    putStrLn ""
 

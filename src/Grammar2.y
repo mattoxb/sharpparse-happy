@@ -9,16 +9,23 @@ import Data.Char
 
 %token
 
-    'foobar'   { Token_foobar }
-    'buzz'   { Token_buzz }
-    'bar'   { Token_bar }
+    '+'   { TokenPlus }
+    '.'   { TokenPeriod }
+    's'   { Token_s }
+    '('   { TokenLeftParen }
+    ')'   { TokenRightParen }
 
 
 %%
 
-Foo: 'bar'  { concat ["bar3 { } (", "", ")"] } 
-Foo: 'buzz'  { concat ["buzz2 { } (", "", ")"] } 
-Fizz: 'foobar'  { concat ["foobar { } (", "", ")"] } 
+Grm: Foo { $1 }
+
+Nat: Nat '+' Nat  { concat ["plus { } (", $1,",",$3, ")"] } 
+Nat: 's' '(' Nat ')'  { concat ["succ { } (", $3, ")"] } 
+Nat: '.'  { concat ["zero { } (", "", ")"] } 
+Foo: Foo '+' Foo  { concat ["fooplus { } (", $1,",",$3, ")"] } 
+Foo: 's' '(' Foo ')'  { concat ["foosucc { } (", $3, ")"] } 
+Foo: '.'  { concat ["foozero { } (", "", ")"] } 
 
 {
 parseError :: [Token] -> a
@@ -26,9 +33,11 @@ parseError x = error ("Parse error: " ++ show x)
 
 
 data Token = TokenId String
-           | Token_foobar
-           | Token_buzz
-           | Token_bar
+           | TokenPlus
+           | TokenPeriod
+           | Token_s
+           | TokenLeftParen
+           | TokenRightParen
    deriving (Show)
 
 
@@ -43,12 +52,14 @@ eatws xx = xx
 lexer :: String -> [Token]
 lexer [] = []
 lexer (c:xs)  | isSpace c = lexer xs
+lexer ('+':xs) = TokenPlus: lexer xs
+lexer ('.':xs) = TokenPeriod: lexer xs
+lexer ('(':xs) = TokenLeftParen: lexer xs
+lexer (')':xs) = TokenRightParen: lexer xs
 
 lexer xx = case lexId xx of
     ("",xs) -> [] -- handles eof
-    ("foobar",xs) -> Token_foobar : lexer (eatws xs)
-    ("buzz",xs) -> Token_buzz : lexer (eatws xs)
-    ("bar",xs) -> Token_bar : lexer (eatws xs)
+    ("s",xs) -> Token_s : lexer (eatws xs)
     ("END",xs) -> [] -- handles eof
     (s,xs) -> TokenId s : lexer xs
 }
