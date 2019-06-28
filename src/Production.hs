@@ -1,5 +1,4 @@
 module Production where
-import Data.String
 
 data Production = Production String [Symbol] [Attribute]
   deriving Show

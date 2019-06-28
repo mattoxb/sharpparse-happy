@@ -4,7 +4,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-stack exec parse < $1 > src/Grammar2.y
+stack exec parser-generator < $1 > src/Grammar2.y
 if [ $? -ne 0 ]; then
     echo INITIAL PARSE FAILED
     cp src/Grammar2-reference.y src/Grammar2.y
@@ -19,4 +19,4 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-stack exec subparse < $2
+stack exec parser < $2
