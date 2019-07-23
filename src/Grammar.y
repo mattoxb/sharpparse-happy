@@ -64,7 +64,7 @@ data Token
       | TokenLanguageGrammar
       | TokenEndmodule
       | TokenError String
-    deriving Show
+    deriving (Show)
 
 lexId [] = ("",[])
 lexId (c:xx) | isAlpha c =

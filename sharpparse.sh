@@ -1,3 +1,7 @@
+if [ ! -a src/Grammar2.y ] ; then
+    cp src/Grammar2.yy src/Grammar2.y
+fi
+
 stack build 
 if [ $? -ne 0 ]; then
     echo BUILD FAILED
