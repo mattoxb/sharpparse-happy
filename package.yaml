@@ -44,21 +44,6 @@ executables:
 #   dependencies:
 #    - sharpparse
 
-  parser:
-    main:                Main.hs
-    source-dirs:
-    - src
-    - parser
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-#    system-build-tools: happy-glr
-    system-build-tools: happy
-    dependencies:
-    - containers
-#   - sharpparse
-
 tests:
   sharpparse-test:
     main:                Spec.hs

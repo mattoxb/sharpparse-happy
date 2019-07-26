@@ -6,16 +6,17 @@ a parser using `happy` that will return KAST.
 It runs it two stages: the parser generator reads a K file and generates
 a corresponding `happy` file.  Currently this resides in `src/Grammar2.y`.
 
-The second stage involves compiling `Grammar2` into a `parser` executable
+The second stage involves compiling `Grammar2` into a `parse` executable
 which then can parse a file written in the specified grammar.
 
-## Running directly from `stack`
+## Running
 
-To run this directly from `stack`, issue the following two commands.
+To run this, use the `sharpparse.sh` script.  The first argument will be
+the K specification, the second is the input you want to parse, and the
+third (optional) argument is the start symbol.
 
 ```
-stack build && stack exec parser-generator < test-data/test1.k > src/Grammar2.y
-stack build && stack exec parser < test-data/test1.in
+./sharpparse.sh test-data/test1.k test-data/test1-1.in Foo
 ```
 
 If you want to specify a start symbol, you can do that with an argument to
@@ -41,37 +42,27 @@ If you don't specify a start symbol, the first token defined will be taken
 as start.  In this case, `Nat`.
 
 ```
-% stack exec parser-generator < test-data/test4.k > src/Grammar2.y
-% stack exec parser < test-data/test4-1.in
+% ./sharpparse.sh test-data/test4.k test-data/test4-1.in
 "plus { } (succ { } (succ { } (zero { } ())),succ { } (succ { } (zero { } ())))"
 ```
 
 But if we specify `Foo` instead, we get this:
 
 ```
-% stack exec parser-generator Foo < test-data/test4.k > src/Grammar2.y
-% stack exec parser < test-data/test4-1.in
+% ./sharpparse.sh test-data/test4.k test-data/test4-1.in Foo
 "fooplus { } (foosucc { } (foosucc { } (foozero { } ())),foosucc { } (foosucc { } (foozero { } ())))"
 ```
-
-Unfortunately, you must rerun the parser-generator if you want to change
-the start symbol.
-
-
-## sharpparse.sh
-
-There is a script "sharpparse.sh" that takes two or three command line
-arguments, the k file, the input file, and optionally the start symbol.
-It does all the building and checking for you.
 
 # Details
 
 The file `Grammar.y` is the grammar to parse K syntax declarations.
 This should not need to be modified in day-to-day operations.
 
-The executable `parser` will parse a given K syntax specification on
+The executable `parse` will parse a given K syntax specification on
 `STDIN` and output a `happy` compatible grammar file.  It is intended
-that you copy this over `Grammar2.y` and run `stack build` again.
+that you copy this over `Grammar2.y` and run `stack ghc` again.
+For some reason `stack build` does not work well with `happy` when
+GLR mode is activated.
 
 The nice thing is that if you parse the same grammar more than once
 the build stage detects this and doesn't have to recompile anything.

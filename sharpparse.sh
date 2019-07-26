@@ -1,21 +1,18 @@
-if [ ! -a src/Grammar2.y ] ; then
-    cp src/Grammar2.yy src/Grammar2.y
-fi
-
 stack build 
 if [ $? -ne 0 ]; then
     echo BUILD FAILED
     exit 1
 fi
 
-stack exec parser-generator $3 < $1 > src/Grammar2.y
+stack exec parser-generator $3 < $1 > parser/Grammar2.y
 if [ $? -ne 0 ]; then
     echo INITIAL PARSE FAILED
-    cp ref/Grammar2-reference.y src/Grammar2.y
     exit 1
 fi
 
-stack build 
+happy -i parser/Grammar2.y
+(cd parser ; stack ghc -- -cpp -o ../parse --make Main.hs)
+
 if [ $? -ne 0 ]; then
     echo PARSER COMPILE FAILED
     echo Investigate src/Grammar2.y, then do
@@ -23,4 +20,4 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-stack exec parser < $2
+./parse < $2
