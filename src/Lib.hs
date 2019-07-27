@@ -58,7 +58,7 @@ genTokenDecl tokens =
 
 genTokenData :: [String] -> String
 genTokenData tokens = 
-  "data Token = TokenId String\n" ++ concatMap (\t -> "           | " ++ tokenName t ++"\n") tokens ++ "   deriving (Show)\n\n"
+  "data Token = TokenId String\n" ++ concatMap (\t -> "           | " ++ tokenName t ++"\n") tokens ++ "   deriving (Eq,Ord,Show)\n\n"
   
 isKLabel :: Attribute -> Bool
 isKLabel (KLabel _) = True
@@ -86,20 +86,60 @@ genAction p@(Production nt symbols attrs) kl =
             , symbolList
             , ", \")\"]"]
 
+-- genOutput p(Production nt symbols attrs) =
+--    concat [ "output (idx1,idx2,G_" ++ nt ++ ") = 
+
 genProduction p@(Production l symbols attributes) =
   let kl = getKLabel p
    in concat [ l
              , ": "
              , intercalate " " (map showSymbol symbols)
              , "  { "
-             , (genAction p kl)
+--             , (genAction p kl)
              , " } "]
 
+outputHeader =
+  concat [ "blookup fid m = let Just x = Map.lookup fid m in fmap b_nodes x"
+         , "\n"
+         ]
+
+genOutputPattern p@(Production nt symbols attrs) =
+  let kl = getKLabel p
+   in concat [ "output [["
+             , intercalate "," $ zipWith (\n t -> "b" ++ show n ++ "@(_,_," ++ t ++ ")")
+                                         [1..] glrSymbols
+             , "]] m =\n"
+             , "    \"" ++ kl
+             , subtreeArgs
+             , "\n"]
+  where getGLRsym (T x) = "HappyTok " ++ tokenName x
+        getGLRsym (NT x) = "G_" ++ x
+        glrSymbols = map getGLRsym symbols
+        -- the indices of things that will be arguments
+        treeIndices = map fst $ filter (\(a,b) -> isNonTerm b) $ zip [1..] symbols
+        subtreeArgs = case length treeIndices of
+          0 -> "\""
+          _ -> concat [ "(\" ++ "
+                      , intercalate " ++ \",\" ++ " $
+                        map (\i -> "output (blookup b" ++ show i ++ " m) m") treeIndices
+                      , "++ \")\""
+                      ]
+
+outputFooter =
+  concat [ "output (x:y:ys) m = \"amb(\" ++ output [x] m ++ \",\" ++ output (y:ys) m ++ \")\"\n"
+         , "output x m = error $ \"Unrecognized productions: \" ++ show x"]
+
+-- output [[ b1@(_,_,HappyTok Token_s)
+--         , b2@(_,_,HappyTok TokenLeftParen)
+--         , b3@(_,_,G_Foo)
+--         , b4@(_,_,HappyTok TokenRightParen)]] m =
+--   "foosucc(" ++ output (blookup b3 m) m ++ ")"
 
 happyHeader =
   concat [ "{\n"
          , "module Grammar2 where\n"
          , "import Data.Char\n"
+         , "import qualified Data.Map as Map\n"
          , "}\n"
          , "\n"
          , "%name kinkgrammar\n"

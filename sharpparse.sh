@@ -10,7 +10,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-happy -i parser/Grammar2.y
+happy -i -l parser/Grammar2.y
 (cd parser ; stack ghc -- -cpp -o ../parse --make Main.hs)
 
 if [ $? -ne 0 ]; then

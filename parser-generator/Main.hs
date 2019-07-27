@@ -28,7 +28,7 @@ main = do
                  (x:xs, _)               -> x
                  ([]  , Production l _ _)  -> l
 
-   putStrLn $ "Grm: " ++ start ++ " { $1 }\n"
+   putStrLn $ "Grm: " ++ start ++ " { }\n"
    mapM putStrLn (map genProduction k)
    putStrLn ""
 
@@ -47,5 +47,16 @@ main = do
    putStr   $ lexTerminals tokens
    putStrLn "    (\"END\",xs) -> [] -- handles eof"
    putStrLn "    (s,xs) -> TokenId s : lexer xs"
+   putStrLn ""
+   putStrLn "test G_Grm = \"Grm\""
+
+   putStrLn ""
+
+   -- Print out the output generator
+   putStrLn outputHeader
+
+   mapM putStrLn (map genOutputPattern k)
+
+   putStrLn outputFooter
    putStrLn "}\n"
    return ()
